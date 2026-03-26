@@ -93,8 +93,9 @@ def ensure_repo_structure():
                 print(f"  Created folder: {folder}/")
 
 
-def _parse_frontmatter(content: str) -> dict:
-    """Extract YAML frontmatter from a markdown file."""
+def _parse_note(content: str) -> dict:
+    """Extract frontmatter and body sections from a markdown note."""
+    # Parse frontmatter
     match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
     if not match:
         return {}
@@ -102,15 +103,35 @@ def _parse_frontmatter(content: str) -> dict:
     for line in match.group(1).splitlines():
         if ": " in line:
             key, val = line.split(": ", 1)
-            # Strip quotes
             val = val.strip().strip('"').strip("'")
-            # Parse relevance as int
             if key.strip() == "relevance":
                 try:
                     val = int(val)
                 except ValueError:
                     val = 3
             data[key.strip()] = val
+
+    # Parse body sections
+    body = content[match.end():].strip()
+    sections = re.split(r'^## ', body, flags=re.MULTILINE)
+    for section in sections:
+        if not section.strip():
+            continue
+        lines = section.strip().splitlines()
+        header = lines[0].strip()
+        content_lines = [l.strip() for l in lines[1:] if l.strip()]
+
+        if header.startswith("תקציר"):
+            data["_summary"] = " ".join(content_lines)
+        elif header.startswith("תובנות"):
+            data["_insights"] = [l.lstrip("- ") for l in content_lines]
+        elif header.startswith("כלים"):
+            data["_tools"] = [l for l in content_lines if not l.startswith("|---") and not l.startswith("| שם")]
+        elif header.startswith("פריטי"):
+            data["_actions"] = [l.lstrip("- [ ] ").lstrip("- ") for l in content_lines]
+        elif header.startswith("הערות"):
+            data["_verification"] = [l.lstrip("- ⚠️ ").lstrip("- ") for l in content_lines]
+
     return data
 
 
@@ -129,7 +150,7 @@ def _collect_notes():
             if item.name.endswith(".md") and item.name != ".gitkeep":
                 try:
                     file_content = item.decoded_content.decode("utf-8")
-                    fm = _parse_frontmatter(file_content)
+                    fm = _parse_note(file_content)
                     if fm:
                         fm["_path"] = item.path
                         fm["_category"] = category_key
