@@ -114,14 +114,11 @@ def _parse_frontmatter(content: str) -> dict:
     return data
 
 
-def update_index():
-    """
-    Read all notes from the repo, generate and push an updated README.md index.
-    """
+def _collect_notes():
+    """Read all notes from the repo and return them sorted by date."""
     g = Github(GITHUB_TOKEN)
     repo = g.get_repo(GITHUB_REPO)
 
-    # Collect all notes
     notes = []
     for category_key in CATEGORIES:
         try:
@@ -140,8 +137,16 @@ def update_index():
                 except Exception:
                     continue
 
-    # Sort by date (newest first)
     notes.sort(key=lambda n: n.get("date_processed", ""), reverse=True)
+    return notes
+
+
+def update_index():
+    """
+    Read all notes from the repo, generate and push an updated README.md index
+    and HTML dashboard.
+    """
+    notes = _collect_notes()
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -219,4 +224,10 @@ def update_index():
 """
 
     # Push README
-    save_to_github("README.md", readme, "📇 Update index")
+    save_to_github("README.md", readme, "Update index")
+
+    # Push HTML dashboard
+    from .dashboard import generate_dashboard_html
+    html = generate_dashboard_html(notes)
+    save_to_github("docs/index.html", html, "Update dashboard")
+    print(f"Dashboard updated: {len(notes)} notes")
