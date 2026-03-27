@@ -105,10 +105,8 @@ def _build_note_card(note: dict, index: int) -> str:
     has_details = any([insights, tools, actions, verification])
     expand_btn = f'<button class="expand-btn" onclick="toggleCard(this)"><i class="ph ph-caret-down"></i></button>' if has_details else ""
 
-    delay = min(index * 0.04, 0.4)
-
     return f"""
-    <article class="card" data-category="{cat_key}" style="--accent:{accent};animation-delay:{delay}s">
+    <article class="card" data-category="{cat_key}" style="--accent:{accent}">
       <div class="card-glow"></div>
       <div class="card-header">
         <div class="card-icon"><i class="{icon_class}"></i></div>
@@ -121,7 +119,7 @@ def _build_note_card(note: dict, index: int) -> str:
       <h3 class="card-title-he">{title_he}</h3>
       <p class="card-title-en">{title_en}</p>
       {summary_html}
-      <div class="card-details" style="display:none">
+      <div class="card-details">
         {insights_html}
         {tools_html}
         {actions_html}
@@ -182,7 +180,7 @@ def generate_dashboard_html(notes: list) -> str:
   <link rel="icon" href="{favicon_svg}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css" rel="stylesheet">
   <style>
@@ -190,26 +188,33 @@ def generate_dashboard_html(notes: list) -> str:
 
     :root {{
       --bg: #010102;
-      --bg-elevated: #0a0a0f;
-      --surface: rgba(255,255,255,0.04);
-      --surface-hover: rgba(255,255,255,0.07);
+      --bg-elevated: #0d0d14;
+      --surface: rgba(255,255,255,0.05);
+      --surface-hover: rgba(255,255,255,0.09);
       --pink: #FE2C55;
       --cyan: #25F4EE;
+      --purple: #A855F7;
       --white: #EDEDEF;
-      --muted: #8A8B91;
-      --dim: #3A3B44;
-      --border: rgba(255,255,255,0.07);
-      --radius: 16px;
+      --muted: #9ca3af;
+      --dim: #4b5563;
+      --border: rgba(255,255,255,0.08);
+      --radius: 20px;
       --ease: cubic-bezier(0.16,1,0.3,1);
     }}
 
+    html {{ scroll-behavior: smooth; }}
+
     body {{
-      font-family: 'Inter', -apple-system, sans-serif;
+      font-family: 'Nunito', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--white);
       min-height: 100vh;
       direction: rtl;
       overflow-x: hidden;
+    }}
+
+    h1, h2, h3, .stat-value, .logo-badge span {{
+      font-family: 'Fredoka', 'Nunito', sans-serif;
     }}
 
     /* === Ambient blobs === */
@@ -223,25 +228,54 @@ def generate_dashboard_html(notes: list) -> str:
     .blob {{
       position: absolute;
       border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.12;
-      animation: drift 20s ease-in-out infinite alternate;
+      filter: blur(100px);
+      opacity: 0.15;
+      animation: drift 25s ease-in-out infinite alternate;
     }}
     .blob-pink {{
-      width: 500px; height: 500px;
+      width: 600px; height: 600px;
       background: var(--pink);
-      top: -10%; right: -10%;
+      top: -15%; right: -10%;
     }}
     .blob-cyan {{
-      width: 400px; height: 400px;
+      width: 500px; height: 500px;
       background: var(--cyan);
-      bottom: 10%; left: -8%;
-      animation-delay: -10s;
+      bottom: 5%; left: -10%;
+      animation-delay: -12s;
       animation-direction: alternate-reverse;
     }}
+    .blob-purple {{
+      width: 350px; height: 350px;
+      background: var(--purple);
+      top: 40%; left: 50%;
+      animation-delay: -6s;
+      opacity: 0.08;
+    }}
     @keyframes drift {{
-      0% {{ transform: translate(0, 0) scale(1); }}
-      100% {{ transform: translate(40px, -30px) scale(1.1); }}
+      0% {{ transform: translate(0, 0) scale(1) rotate(0deg); }}
+      100% {{ transform: translate(50px, -40px) scale(1.15) rotate(5deg); }}
+    }}
+
+    /* === Floating particles === */
+    .particles {{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }}
+    .particle {{
+      position: absolute;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }}
+    @keyframes floatUp {{
+      0% {{ opacity: 0; transform: translateY(100vh) scale(0); }}
+      10% {{ opacity: 0.6; }}
+      90% {{ opacity: 0.6; }}
+      100% {{ opacity: 0; transform: translateY(-10vh) scale(1); }}
     }}
 
     /* === Layout === */
@@ -249,68 +283,129 @@ def generate_dashboard_html(notes: list) -> str:
 
     /* === Hero === */
     .hero {{
-      padding: 64px 24px 32px;
+      padding: 80px 24px 40px;
       text-align: center;
+      animation: heroIn 0.8s var(--ease) backwards;
+    }}
+    @keyframes heroIn {{
+      from {{ opacity: 0; transform: translateY(-30px); }}
+      to {{ opacity: 1; transform: translateY(0); }}
     }}
 
     .logo-badge {{
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 20px 8px 12px;
+      gap: 12px;
+      padding: 10px 24px 10px 14px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 100px;
-      margin-bottom: 20px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      margin-bottom: 24px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+      animation: heroIn 0.8s var(--ease) 0.1s backwards;
+    }}
+    .logo-badge::before {{
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      animation: shimmer 3s ease-in-out infinite;
+    }}
+    @keyframes shimmer {{
+      0%,100% {{ transform: translateX(-100%); }}
+      50% {{ transform: translateX(100%); }}
     }}
 
-    .logo-badge i {{
-      font-size: 20px;
+    .logo-badge .badge-icon {{
+      width: 32px; height: 32px;
+      border-radius: 50%;
       background: linear-gradient(135deg, var(--cyan), var(--pink));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #fff;
+      animation: iconPulse 3s ease-in-out infinite;
+    }}
+    @keyframes iconPulse {{
+      0%,100% {{ box-shadow: 0 0 0 0 rgba(37,244,238,0.3); }}
+      50% {{ box-shadow: 0 0 0 8px rgba(37,244,238,0); }}
     }}
 
     .logo-badge span {{
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--muted);
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
     }}
 
     .hero h1 {{
-      font-size: clamp(32px, 6vw, 56px);
+      font-size: clamp(40px, 7vw, 72px);
       font-weight: 700;
-      letter-spacing: -1px;
+      letter-spacing: -1.5px;
       line-height: 1.1;
-      background: linear-gradient(135deg, var(--white) 0%, var(--muted) 100%);
+      background: linear-gradient(135deg, var(--white) 0%, var(--cyan) 50%, var(--pink) 100%);
+      background-size: 200% 200%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: gradientShift 6s ease-in-out infinite, heroIn 0.8s var(--ease) 0.2s backwards;
+    }}
+    @keyframes gradientShift {{
+      0%,100% {{ background-position: 0% 50%; }}
+      50% {{ background-position: 100% 50%; }}
     }}
 
     .hero-sub {{
       color: var(--muted);
-      font-size: 16px;
-      margin-top: 12px;
+      font-size: 18px;
+      margin-top: 16px;
+      font-weight: 500;
+      animation: heroIn 0.8s var(--ease) 0.3s backwards;
     }}
 
     /* === Stats === */
     .stats {{
       display: flex;
       justify-content: center;
-      gap: 48px;
-      padding: 20px 24px 28px;
+      gap: 20px;
+      padding: 24px 24px 32px;
+      flex-wrap: wrap;
+      animation: heroIn 0.8s var(--ease) 0.4s backwards;
     }}
 
-    .stat {{ text-align: center; }}
+    .stat {{
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 32px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+      cursor: default;
+    }}
+    .stat:hover {{
+      transform: translateY(-4px);
+      border-color: rgba(37,244,238,0.2);
+      box-shadow: 0 8px 32px rgba(37,244,238,0.08);
+    }}
+
+    .stat-icon {{
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
+    }}
+    .stat:nth-child(1) .stat-icon {{ color: var(--pink); }}
+    .stat:nth-child(2) .stat-icon {{ color: var(--cyan); }}
+    .stat:nth-child(3) .stat-icon {{ color: var(--purple); }}
 
     .stat-value {{
-      font-size: 32px;
+      font-size: 36px;
       font-weight: 700;
       background: linear-gradient(135deg, var(--pink), var(--cyan));
       -webkit-background-clip: text;
@@ -319,112 +414,127 @@ def generate_dashboard_html(notes: list) -> str:
     }}
 
     .stat-label {{
-      font-size: 11px;
+      font-size: 12px;
       color: var(--dim);
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      margin-top: 2px;
+      margin-top: 4px;
+      font-weight: 600;
     }}
 
     /* === Search === */
     .search-wrap {{
-      max-width: 520px;
-      margin: 0 auto 12px;
+      max-width: 560px;
+      margin: 0 auto 16px;
       padding: 0 24px;
       position: relative;
+      animation: heroIn 0.8s var(--ease) 0.5s backwards;
     }}
 
     .search-input {{
       width: 100%;
-      padding: 14px 20px 14px 48px;
+      padding: 16px 24px 16px 52px;
       border-radius: 100px;
       border: 1px solid var(--border);
       background: var(--surface);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       color: var(--white);
       font-family: inherit;
-      font-size: 14px;
+      font-size: 16px;
       outline: none;
-      transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+      transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), background 0.3s var(--ease);
     }}
-    .search-input::placeholder {{ color: var(--dim); }}
+    .search-input::placeholder {{ color: var(--dim); font-size: 15px; }}
     .search-input:focus {{
-      border-color: rgba(37,244,238,0.3);
-      box-shadow: 0 0 0 3px rgba(37,244,238,0.08);
+      border-color: rgba(37,244,238,0.4);
+      box-shadow: 0 0 0 4px rgba(37,244,238,0.1), 0 4px 24px rgba(37,244,238,0.06);
+      background: rgba(255,255,255,0.07);
     }}
 
     .search-icon {{
       position: absolute;
-      right: 42px;
+      right: 44px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--muted);
-      font-size: 18px;
+      font-size: 20px;
       pointer-events: none;
+      transition: color 0.3s;
     }}
+    .search-input:focus ~ .search-icon {{ color: var(--cyan); }}
 
     /* === Filters === */
     .filters {{
       display: flex;
-      gap: 8px;
-      padding: 12px 24px 20px;
+      gap: 10px;
+      padding: 16px 24px 24px;
       overflow-x: auto;
       scrollbar-width: none;
       justify-content: center;
       flex-wrap: wrap;
+      animation: heroIn 0.8s var(--ease) 0.55s backwards;
     }}
     .filters::-webkit-scrollbar {{ display: none; }}
 
     .filter-btn {{
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 18px;
+      gap: 8px;
+      padding: 10px 22px;
       border: 1px solid var(--border);
       border-radius: 100px;
       background: transparent;
       color: var(--muted);
-      font-family: inherit;
-      font-size: 13px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.25s var(--ease);
+      transition: all 0.3s var(--ease);
       white-space: nowrap;
     }}
     .filter-btn:hover {{
       border-color: var(--dim);
       color: var(--white);
       background: var(--surface);
+      transform: translateY(-2px);
+    }}
+    .filter-btn:active {{
+      transform: translateY(0) scale(0.96);
     }}
     .filter-btn.active {{
-      background: var(--white);
-      color: #010102;
-      border-color: var(--white);
+      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      color: #fff;
+      border-color: transparent;
       font-weight: 600;
+      box-shadow: 0 4px 20px rgba(254,44,85,0.25);
     }}
     .filter-btn .count {{
-      font-size: 11px;
-      opacity: 0.6;
+      font-size: 12px;
+      opacity: 0.7;
+      background: rgba(255,255,255,0.15);
+      padding: 1px 8px;
+      border-radius: 100px;
     }}
 
     /* === Divider === */
     .divider {{
       height: 1px;
-      background: linear-gradient(90deg, transparent, var(--dim) 50%, transparent);
+      background: linear-gradient(90deg, transparent, var(--pink) 30%, var(--cyan) 70%, transparent);
       margin: 0 40px;
+      opacity: 0.3;
     }}
 
     /* === Cards === */
     .cards-container {{
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 28px 24px;
+      padding: 36px 24px;
     }}
     .cards-grid {{
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 24px;
     }}
 
     .card {{
@@ -432,49 +542,60 @@ def generate_dashboard_html(notes: list) -> str:
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      transition: transform 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
-      animation: fadeUp 0.5s var(--ease) backwards;
+      gap: 14px;
+      transition: transform 0.4s var(--ease), border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
       overflow: hidden;
+      opacity: 0;
+      transform: translateY(40px);
+    }}
+    .card.revealed {{
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.6s var(--ease), transform 0.6s var(--ease), border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
     }}
     .card:hover {{
-      transform: translateY(-3px);
-      border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent);
+      transform: translateY(-6px) scale(1.01);
+      border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5),
+                  0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
+                  0 0 40px color-mix(in srgb, var(--accent) 8%, transparent);
     }}
 
     .card-glow {{
       position: absolute;
-      top: 0; right: 0;
-      width: 120px; height: 120px;
-      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+      top: -20px; right: -20px;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent), transparent 70%);
       pointer-events: none;
+      transition: opacity 0.4s;
+      opacity: 0.5;
     }}
-
-    @keyframes fadeUp {{
-      from {{ opacity: 0; transform: translateY(20px); }}
-      to {{ opacity: 1; transform: translateY(0); }}
-    }}
+    .card:hover .card-glow {{ opacity: 1; }}
 
     .card-header {{
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }}
 
     .card-icon {{
-      width: 40px; height: 40px;
-      border-radius: 10px;
-      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent), color-mix(in srgb, var(--accent) 8%, transparent));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 24px;
       color: var(--accent);
       flex-shrink: 0;
+      transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+    }}
+    .card:hover .card-icon {{
+      transform: scale(1.1) rotate(-5deg);
+      box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 20%, transparent);
     }}
 
     .card-meta {{
@@ -482,58 +603,76 @@ def generate_dashboard_html(notes: list) -> str:
       min-width: 0;
     }}
     .card-category {{
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 1px;
+      font-family: 'Fredoka', sans-serif;
     }}
     .card-date {{
-      font-size: 11px;
+      font-size: 12px;
       color: var(--dim);
       display: flex;
       align-items: center;
       gap: 4px;
-      margin-top: 1px;
+      margin-top: 2px;
     }}
 
     .card-relevance {{
       display: flex;
-      gap: 2px;
-      font-size: 13px;
+      gap: 3px;
+      font-size: 15px;
       flex-shrink: 0;
     }}
     .card-relevance .ph-fill {{ color: #FBBF24; }}
     .card-relevance .ph {{ color: var(--dim); }}
 
     .card-title-he {{
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 600;
       line-height: 1.5;
       color: var(--white);
     }}
 
     .card-title-en {{
-      font-size: 13px;
+      font-size: 15px;
       color: var(--muted);
-      line-height: 1.4;
+      line-height: 1.5;
     }}
 
     .card-summary {{
-      font-size: 14px;
-      line-height: 1.7;
+      font-size: 15px;
+      line-height: 1.8;
       color: var(--muted);
-      border-inline-start: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
-      padding-inline-start: 12px;
+      border-inline-start: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+      padding-inline-start: 14px;
+      background: color-mix(in srgb, var(--accent) 3%, transparent);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
     }}
 
     /* === Card sections === */
-    .card-details {{ display: flex; flex-direction: column; gap: 12px; }}
+    .card-details {{
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.5s var(--ease), opacity 0.4s var(--ease), margin 0.4s var(--ease);
+      margin-top: -8px;
+    }}
+    .card-details.open {{
+      max-height: 800px;
+      opacity: 1;
+      margin-top: 0;
+    }}
 
     .card-section {{
       background: var(--surface);
-      border-radius: 10px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      padding: 14px 16px;
     }}
     .card-section.verification {{
       border: 1px solid rgba(251,191,36,0.15);
@@ -541,132 +680,218 @@ def generate_dashboard_html(notes: list) -> str:
     }}
 
     .card-section-title {{
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 1px;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      font-family: 'Fredoka', sans-serif;
     }}
-    .card-section-title i {{ font-size: 14px; color: var(--accent); }}
+    .card-section-title i {{ font-size: 16px; color: var(--accent); }}
     .card-section.verification .card-section-title i {{ color: #FBBF24; }}
 
     .card-list {{
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }}
     .card-list li {{
-      font-size: 13px;
-      line-height: 1.6;
+      font-size: 14px;
+      line-height: 1.7;
       color: var(--muted);
-      padding-inline-start: 12px;
+      padding-inline-start: 14px;
       position: relative;
     }}
     .card-list li::before {{
       content: '';
       position: absolute;
       right: 0;
-      top: 9px;
-      width: 4px; height: 4px;
+      top: 10px;
+      width: 5px; height: 5px;
       border-radius: 50%;
-      background: var(--dim);
+      background: var(--accent);
+      opacity: 0.5;
     }}
     .card-list.actions li {{
       display: flex;
       align-items: flex-start;
-      gap: 6px;
+      gap: 8px;
       padding-inline-start: 0;
     }}
     .card-list.actions li::before {{ display: none; }}
-    .card-list.actions li i {{ color: var(--accent); margin-top: 3px; flex-shrink: 0; }}
+    .card-list.actions li i {{ color: var(--accent); margin-top: 3px; flex-shrink: 0; font-size: 16px; }}
 
     /* === Expand === */
     .expand-btn {{
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 100px;
-      width: 32px; height: 32px;
+      width: 36px; height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--muted);
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
-      transition: all 0.25s var(--ease);
+      transition: all 0.3s var(--ease);
       flex-shrink: 0;
     }}
-    .expand-btn:hover {{ background: var(--surface-hover); color: var(--white); }}
+    .expand-btn:hover {{
+      background: var(--surface-hover);
+      color: var(--white);
+      border-color: var(--dim);
+      transform: scale(1.1);
+    }}
     .expand-btn.open {{ transform: rotate(180deg); }}
+    .expand-btn.open:hover {{ transform: rotate(180deg) scale(1.1); }}
 
-    /* === Footer === */
+    /* === Card Footer === */
     .card-footer {{
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       margin-top: auto;
-      padding-top: 14px;
+      padding-top: 16px;
       border-top: 1px solid var(--border);
       flex-wrap: wrap;
     }}
 
     .card-tags {{
       display: flex;
-      gap: 4px;
+      gap: 6px;
       flex-wrap: wrap;
       flex: 1;
     }}
     .tag {{
-      padding: 3px 10px;
+      padding: 4px 12px;
       border-radius: 100px;
-      font-size: 11px;
+      font-size: 12px;
       background: var(--surface);
       color: var(--dim);
       border: 1px solid var(--border);
-      transition: color 0.2s;
+      transition: all 0.3s var(--ease);
+      font-weight: 500;
     }}
-    .card:hover .tag {{ color: var(--muted); }}
+    .card:hover .tag {{
+      color: var(--muted);
+      border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+    }}
 
     .card-source {{
       color: var(--cyan);
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      transition: opacity 0.2s;
+      gap: 6px;
+      transition: all 0.3s var(--ease);
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: rgba(37,244,238,0.08);
     }}
-    .card-source:hover {{ opacity: 0.7; }}
+    .card-source:hover {{
+      background: rgba(37,244,238,0.15);
+      transform: translateX(-4px);
+    }}
+    .card-source i {{ transition: transform 0.3s var(--ease); }}
+    .card-source:hover i {{ transform: translate(-2px, -2px); }}
 
     /* === Empty === */
     .empty {{
       text-align: center;
-      padding: 80px 24px;
+      padding: 100px 24px;
       color: var(--dim);
     }}
-    .empty i {{ font-size: 48px; display: block; margin-bottom: 12px; }}
+    .empty i {{ font-size: 56px; display: block; margin-bottom: 16px; opacity: 0.5; }}
+    .empty p {{ font-size: 18px; font-family: 'Fredoka', sans-serif; }}
 
-    /* === Footer === */
+    /* === Page Footer === */
     footer {{
       text-align: center;
-      padding: 48px 24px;
+      padding: 56px 24px;
       color: var(--dim);
-      font-size: 12px;
+      font-size: 14px;
     }}
-    footer a {{ color: var(--muted); text-decoration: none; transition: color 0.2s; }}
-    footer a:hover {{ color: var(--white); }}
+    footer a {{
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.3s;
+      font-weight: 600;
+    }}
+    footer a:hover {{ color: var(--cyan); }}
+    footer .footer-heart {{
+      display: inline-block;
+      color: var(--pink);
+      animation: heartbeat 2s ease-in-out infinite;
+    }}
+    @keyframes heartbeat {{
+      0%,100% {{ transform: scale(1); }}
+      50% {{ transform: scale(1.2); }}
+    }}
+
+    /* === Scroll to top === */
+    .scroll-top {{
+      position: fixed;
+      bottom: 28px;
+      left: 28px;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s var(--ease);
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(254,44,85,0.3);
+    }}
+    .scroll-top.visible {{
+      opacity: 1;
+      transform: translateY(0);
+    }}
+    .scroll-top:hover {{
+      transform: translateY(-4px) scale(1.1);
+      box-shadow: 0 8px 30px rgba(254,44,85,0.4);
+    }}
+
+    /* === Reduced motion === */
+    @media (prefers-reduced-motion: reduce) {{
+      *, *::before, *::after {{
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }}
+      .card {{ opacity: 1; transform: none; }}
+      .card.revealed {{ transition: none; }}
+      .particle {{ display: none; }}
+    }}
 
     /* === Responsive === */
     @media (max-width: 640px) {{
       .cards-grid {{ grid-template-columns: 1fr; }}
-      .stats {{ gap: 28px; }}
-      .hero {{ padding: 40px 16px 24px; }}
-      .card {{ padding: 18px; }}
+      .stats {{ gap: 12px; }}
+      .stat {{ padding: 14px 20px; }}
+      .stat-value {{ font-size: 28px; }}
+      .hero {{ padding: 48px 16px 28px; }}
+      .hero h1 {{ letter-spacing: -0.5px; }}
+      .card {{ padding: 20px; }}
+      .card-icon {{ width: 42px; height: 42px; font-size: 20px; }}
+      .card-title-he {{ font-size: 19px; }}
+    }}
+    @media (max-width: 420px) {{
+      .stats {{ flex-direction: column; align-items: center; }}
+      .stat {{ width: 100%; max-width: 240px; }}
     }}
   </style>
 </head>
@@ -676,39 +901,46 @@ def generate_dashboard_html(notes: list) -> str:
   <div class="ambient">
     <div class="blob blob-pink"></div>
     <div class="blob blob-cyan"></div>
+    <div class="blob blob-purple"></div>
   </div>
+
+  <!-- Floating particles -->
+  <div class="particles" id="particles"></div>
 
   <div class="page">
     <!-- Hero -->
     <section class="hero">
       <div class="logo-badge">
-        <i class="ph ph-video"></i>
+        <div class="badge-icon"><i class="ph ph-music-notes-simple"></i></div>
         <span>Knowledge Base</span>
       </div>
       <h1>TikTok Knowledge</h1>
-      <p class="hero-sub">AI-extracted insights from tech TikTok &middot; auto-classified &middot; translated to Hebrew</p>
+      <p class="hero-sub"><i class="ph ph-sparkle"></i> AI-extracted insights from tech TikTok <i class="ph ph-dot-outline"></i> auto-classified <i class="ph ph-dot-outline"></i> translated to Hebrew</p>
     </section>
 
     <!-- Stats -->
     <div class="stats">
       <div class="stat">
-        <div class="stat-value">{total}</div>
+        <i class="ph ph-note-pencil stat-icon"></i>
+        <div class="stat-value" data-target="{total}">0</div>
         <div class="stat-label">Notes</div>
       </div>
       <div class="stat">
-        <div class="stat-value">{cats_with_notes}</div>
+        <i class="ph ph-folders stat-icon"></i>
+        <div class="stat-value" data-target="{cats_with_notes}">0</div>
         <div class="stat-label">Categories</div>
       </div>
       <div class="stat">
-        <div class="stat-value">{avg_rel:.1f}</div>
+        <i class="ph ph-star stat-icon"></i>
+        <div class="stat-value" data-target="{avg_rel:.1f}" data-decimal="true">0</div>
         <div class="stat-label">Avg Relevance</div>
       </div>
     </div>
 
     <!-- Search -->
     <div class="search-wrap">
+      <input type="text" class="search-input" placeholder="Search notes..." id="searchInput" aria-label="Search notes">
       <i class="ph ph-magnifying-glass search-icon"></i>
-      <input type="text" class="search-input" placeholder="Search notes..." id="searchInput">
     </div>
 
     <!-- Filters -->
@@ -732,13 +964,69 @@ def generate_dashboard_html(notes: list) -> str:
     <!-- Footer -->
     <footer>
       <p>Last updated: {now}</p>
-      <p style="margin-top:6px">
-        Built with <a href="https://github.com/dartaryan/tiktok-pipeline">TikTok Knowledge Pipeline</a>
+      <p style="margin-top:8px">
+        Built with <span class="footer-heart"><i class="ph-fill ph-heart"></i></span>
+        using <a href="https://github.com/dartaryan/tiktok-pipeline">TikTok Knowledge Pipeline</a>
       </p>
     </footer>
   </div>
 
+  <!-- Scroll to top -->
+  <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
+    <i class="ph ph-arrow-up"></i>
+  </button>
+
   <script>
+    /* === Particles === */
+    (function createParticles() {{
+      const container = document.getElementById('particles');
+      const colors = ['#FE2C55', '#25F4EE', '#A855F7', '#FBBF24'];
+      for (let i = 0; i < 20; i++) {{
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.width = p.style.height = (2 + Math.random() * 4) + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.animationDuration = (12 + Math.random() * 18) + 's';
+        p.style.animationDelay = (Math.random() * 15) + 's';
+        container.appendChild(p);
+      }}
+    }})();
+
+    /* === Counter animation === */
+    function animateCounters() {{
+      document.querySelectorAll('.stat-value[data-target]').forEach(el => {{
+        const target = parseFloat(el.dataset.target);
+        const isDecimal = el.dataset.decimal === 'true';
+        const duration = 1500;
+        const start = performance.now();
+        function tick(now) {{
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = target * eased;
+          el.textContent = isDecimal ? current.toFixed(1) : Math.round(current);
+          if (progress < 1) requestAnimationFrame(tick);
+        }}
+        requestAnimationFrame(tick);
+      }});
+    }}
+    animateCounters();
+
+    /* === Scroll reveal === */
+    const revealObserver = new IntersectionObserver((entries) => {{
+      entries.forEach((entry, i) => {{
+        if (entry.isIntersecting) {{
+          const card = entry.target;
+          const idx = Array.from(card.parentElement.children).indexOf(card);
+          setTimeout(() => card.classList.add('revealed'), idx * 80);
+          revealObserver.unobserve(card);
+        }}
+      }});
+    }}, {{ threshold: 0.08, rootMargin: '0px 0px -40px 0px' }});
+
+    document.querySelectorAll('.card').forEach(card => revealObserver.observe(card));
+
+    /* === Filters & search === */
     const filterBtns = document.querySelectorAll('.filter-btn');
     const cards = document.querySelectorAll('.card');
     const emptyState = document.getElementById('emptyState');
@@ -751,8 +1039,12 @@ def generate_dashboard_html(notes: list) -> str:
       cards.forEach(c => {{
         const catOk = activeFilter === 'all' || c.dataset.category === activeFilter;
         const searchOk = !q || c.textContent.toLowerCase().includes(q);
-        c.style.display = catOk && searchOk ? '' : 'none';
-        if (catOk && searchOk) vis++;
+        const show = catOk && searchOk;
+        c.style.display = show ? '' : 'none';
+        if (show) {{
+          vis++;
+          if (!c.classList.contains('revealed')) c.classList.add('revealed');
+        }}
       }});
       emptyState.style.display = vis === 0 ? '' : 'none';
     }}
@@ -768,13 +1060,23 @@ def generate_dashboard_html(notes: list) -> str:
 
     searchInput.addEventListener('input', applyFilters);
 
+    /* === Card expand/collapse === */
     function toggleCard(btn) {{
       const card = btn.closest('.card');
       const details = card.querySelector('.card-details');
-      const open = details.style.display !== 'none';
-      details.style.display = open ? 'none' : '';
-      btn.classList.toggle('open', !open);
+      const isOpen = details.classList.contains('open');
+      details.classList.toggle('open', !isOpen);
+      btn.classList.toggle('open', !isOpen);
     }}
+
+    /* === Scroll to top === */
+    const scrollBtn = document.getElementById('scrollTop');
+    window.addEventListener('scroll', () => {{
+      scrollBtn.classList.toggle('visible', window.scrollY > 400);
+    }});
+    scrollBtn.addEventListener('click', () => {{
+      window.scrollTo({{ top: 0, behavior: 'smooth' }});
+    }});
   </script>
 </body>
 </html>"""
