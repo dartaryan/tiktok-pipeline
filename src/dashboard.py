@@ -105,8 +105,14 @@ def _build_note_card(note: dict, index: int) -> str:
     has_details = any([insights, tools, actions, verification])
     expand_btn = f'<button class="expand-btn" onclick="toggleCard(this)"><i class="ph ph-caret-down"></i></button>' if has_details else ""
 
+    # Build anchor ID from filepath (e.g. "optiplan/2026-03-26_cursor-tips.md" -> "optiplan-2026-03-26-cursor-tips")
+    anchor_id = ""
+    raw_path = note.get("_path", "")
+    if raw_path:
+        anchor_id = raw_path.replace("/", "-").replace("_", "-").removesuffix(".md")
+
     return f"""
-    <article class="card" data-category="{cat_key}" style="--accent:{accent}">
+    <article class="card" {f'id="{_esc(anchor_id)}"' if anchor_id else ''} data-category="{cat_key}" style="--accent:{accent}">
       <div class="card-glow"></div>
       <div class="card-header">
         <div class="card-icon"><i class="{icon_class}"></i></div>
@@ -835,6 +841,17 @@ def generate_dashboard_html(notes: list) -> str:
       50% {{ transform: scale(1.2); }}
     }}
 
+    /* === Deep-link highlight pulse === */
+    @keyframes highlightPulse {{
+      0% {{ box-shadow: 0 0 0 0 rgba(37, 244, 238, 0.6); }}
+      50% {{ box-shadow: 0 0 20px 8px rgba(37, 244, 238, 0.3); }}
+      100% {{ box-shadow: 0 0 0 0 rgba(37, 244, 238, 0); }}
+    }}
+    .card.highlight-pulse {{
+      animation: highlightPulse 1.5s ease-out 2;
+      border-color: var(--cyan) !important;
+    }}
+
     /* === Scroll to top === */
     .scroll-top {{
       position: fixed;
@@ -1068,6 +1085,23 @@ def generate_dashboard_html(notes: list) -> str:
       details.classList.toggle('open', !isOpen);
       btn.classList.toggle('open', !isOpen);
     }}
+
+    /* === Deep-link: scroll to specific card from URL hash === */
+    (function handleDeepLink() {{
+      const hash = window.location.hash.slice(1);
+      if (!hash) return;
+      const target = document.getElementById(hash);
+      if (!target) return;
+      target.classList.add('revealed');
+      const details = target.querySelector('.card-details');
+      if (details) details.classList.add('open');
+      const expandBtn = target.querySelector('.expand-btn');
+      if (expandBtn) expandBtn.classList.add('open');
+      setTimeout(() => {{
+        target.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+        target.classList.add('highlight-pulse');
+      }}, 300);
+    }})();
 
     /* === Scroll to top === */
     const scrollBtn = document.getElementById('scrollTop');

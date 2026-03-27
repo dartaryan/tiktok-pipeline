@@ -24,6 +24,13 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 GITHUB_REPO = os.getenv("GITHUB_REPO", "")
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main")
 
+# --- GitHub Pages ---
+# Auto-derive from GITHUB_REPO (e.g. "dartaryan/tiktok-knowledge" -> "https://dartaryan.github.io/tiktok-knowledge/")
+# Override with GITHUB_PAGES_URL env var if using a custom domain.
+_repo_parts = GITHUB_REPO.split("/", 1) if GITHUB_REPO else []
+_default_pages_url = f"https://{_repo_parts[0]}.github.io/{_repo_parts[1]}/" if len(_repo_parts) == 2 else ""
+GITHUB_PAGES_URL = os.getenv("GITHUB_PAGES_URL", _default_pages_url)
+
 # --- Paths ---
 WORK_DIR = Path(__file__).parent.parent / ".work"
 WORK_DIR.mkdir(exist_ok=True)

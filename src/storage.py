@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from github import Github, GithubException
 
-from .config import GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, CATEGORIES, CATEGORY_EMOJIS
+from .config import GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, GITHUB_PAGES_URL, CATEGORIES, CATEGORY_EMOJIS
 
 
 def save_to_github(filepath: str, content: str, title: str) -> str:
@@ -52,7 +52,12 @@ def save_to_github(filepath: str, content: str, title: str) -> str:
             raise
 
     file_url = f"https://github.com/{GITHUB_REPO}/blob/{GITHUB_BRANCH}/{filepath}"
-    return file_url
+
+    # Build dashboard deep-link (e.g. "optiplan/2026-03-26_cursor-tips.md" -> "#optiplan-2026-03-26-cursor-tips")
+    anchor = filepath.replace("/", "-").replace("_", "-").removesuffix(".md")
+    dashboard_url = f"{GITHUB_PAGES_URL}#{anchor}"
+
+    return dashboard_url
 
 
 def ensure_repo_structure():
