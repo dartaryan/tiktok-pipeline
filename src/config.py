@@ -35,6 +35,11 @@ GITHUB_PAGES_URL = os.getenv("GITHUB_PAGES_URL", _default_pages_url)
 WORK_DIR = Path(__file__).parent.parent / ".work"
 WORK_DIR.mkdir(exist_ok=True)
 
+# --- Instagram (cookies required for downloading) ---
+# Path to a Netscape-format cookies.txt exported from your browser while logged into Instagram.
+# Required for Instagram Reels. YouTube and TikTok work without cookies.
+INSTAGRAM_COOKIES_FILE = os.getenv("INSTAGRAM_COOKIES_FILE", "")
+
 # --- Claude Model ---
 CLAUDE_MODEL = "claude-sonnet-4-6"
 

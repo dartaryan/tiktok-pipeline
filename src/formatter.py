@@ -6,7 +6,7 @@ from slugify import slugify
 from .processor import ProcessedNote
 
 
-def to_markdown(note: ProcessedNote, source_url: str, creator: str) -> str:
+def to_markdown(note: ProcessedNote, source_url: str, creator: str, platform: str = "tiktok") -> str:
     """Convert a ProcessedNote to a markdown string with YAML frontmatter."""
 
     today = date.today().isoformat()
@@ -18,6 +18,7 @@ title_he: "{note.title_he}"
 title_en: "{note.title_en}"
 source: "{source_url}"
 creator: "@{creator}"
+platform: "{platform}"
 category: "{note.category}"
 relevance: {note.relevance}
 date_processed: "{today}"

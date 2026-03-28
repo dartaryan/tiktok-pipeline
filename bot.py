@@ -1,12 +1,11 @@
-"""Telegram bot for TikTok Knowledge Pipeline."""
+"""Telegram bot for Knowledge Pipeline (TikTok, Instagram Reels, YouTube Shorts)."""
 
-import re
 import logging
 from telegram import Update
 from telegram.ext import Application, MessageHandler, CommandHandler, filters, ContextTypes
 
 from src.config import validate_config, CATEGORIES, CATEGORY_EMOJIS
-from src.downloader import download_audio, cleanup
+from src.downloader import download_audio, cleanup, SUPPORTED_URL_PATTERN, detect_platform
 from src.transcriber import transcribe
 from src.processor import process_transcript
 from src.formatter import to_markdown, generate_filepath
@@ -24,10 +23,6 @@ ALLOWED_USER_IDS = os.getenv("ALLOWED_USER_IDS", "")  # comma-separated, e.g. "1
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TIKTOK_URL_PATTERN = re.compile(
-    r'https?://(?:www\.|vm\.|vt\.)?tiktok\.com/\S+'
-)
-
 
 def is_allowed(user_id: int) -> bool:
     """Check if user is allowed to use the bot."""
@@ -40,23 +35,24 @@ def is_allowed(user_id: int) -> bool:
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command."""
     await update.message.reply_text(
-        "🎬 TikTok Knowledge Pipeline\n\n"
-        "שלח לי לינק של TikTok ואני אתמלל, אסווג ואשמור לך את זה ב-GitHub.\n\n"
-        "Just forward or paste a TikTok link!"
+        "🎬 Knowledge Pipeline\n\n"
+        "שלח לי לינק של TikTok, Instagram Reel, או YouTube Short\n"
+        "ואני אתמלל, אסווג ואשמור לך את זה ב-GitHub.\n\n"
+        "Just forward or paste a link!"
     )
 
 
-async def process_tiktok_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Process a message containing a TikTok URL."""
+async def process_video_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Process a message containing a supported video URL."""
     if not is_allowed(update.effective_user.id):
-        await update.message.reply_text("⛔ Unauthorized.")
+        await update.message.reply_text("Unauthorized.")
         return
 
     text = update.message.text or update.message.caption or ""
-    urls = TIKTOK_URL_PATTERN.findall(text)
+    urls = SUPPORTED_URL_PATTERN.findall(text)
 
     if not urls:
-        return  # Not a TikTok link, ignore silently
+        return  # No supported link, ignore silently
 
     for url in urls:
         status_msg = await update.message.reply_text(f"⏳ Processing...\n{url}")
@@ -84,6 +80,7 @@ async def process_tiktok_link(update: Update, context: ContextTypes.DEFAULT_TYPE
                 note=note,
                 source_url=url,
                 creator=meta.creator,
+                platform=meta.platform.value,
             )
             filepath = generate_filepath(note)
 
@@ -131,7 +128,7 @@ def main():
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND,
-        process_tiktok_link,
+        process_video_link,
     ))
 
     logger.info("🤖 Bot is running...")

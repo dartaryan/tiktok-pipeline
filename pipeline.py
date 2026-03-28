@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
-TikTok Knowledge Extraction Pipeline — Phase 1 (Manual CLI)
+Knowledge Extraction Pipeline — Phase 1 (Manual CLI)
+
+Supports TikTok, Instagram Reels, YouTube Shorts.
 
 Usage:
-    python pipeline.py <tiktok_url>
-    python pipeline.py <tiktok_url> --local    # Save locally instead of GitHub
+    python pipeline.py <video_url>
+    python pipeline.py <video_url> --local     # Save locally instead of GitHub
     python pipeline.py --init                   # Set up GitHub repo structure
     python pipeline.py --batch urls.txt         # Process multiple URLs from file
 
 Examples:
     python pipeline.py "https://www.tiktok.com/@user/video/123456"
-    python pipeline.py "https://vm.tiktok.com/ABC123/"
+    python pipeline.py "https://www.instagram.com/reel/ABC123/"
+    python pipeline.py "https://www.youtube.com/shorts/ABC123"
 """
 
 import sys
@@ -66,6 +69,7 @@ def process_url(url: str, save_local: bool = False) -> dict:
             note=note,
             source_url=url,
             creator=meta.creator,
+            platform=meta.platform.value,
         )
         filepath = generate_filepath(note)
 
@@ -148,12 +152,13 @@ def process_batch(filepath: str, save_local: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="TikTok Knowledge Extraction Pipeline",
+        description="Knowledge Extraction Pipeline (TikTok / Instagram Reels / YouTube Shorts)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python pipeline.py "https://www.tiktok.com/@user/video/123"
-  python pipeline.py "https://vm.tiktok.com/ABC/" --local
+  python pipeline.py "https://www.instagram.com/reel/ABC123/"
+  python pipeline.py "https://www.youtube.com/shorts/ABC123"
   python pipeline.py --batch urls.txt
   python pipeline.py --init
         """,
@@ -162,7 +167,7 @@ Examples:
     parser.add_argument(
         "url",
         nargs="?",
-        help="TikTok video URL to process",
+        help="Video URL to process (TikTok, Instagram Reel, YouTube Short)",
     )
     parser.add_argument(
         "--local",
@@ -207,7 +212,7 @@ Examples:
         sys.exit(1)
 
     # Single URL processing
-    print(f"\n🚀 TikTok Knowledge Pipeline")
+    print(f"\n🚀 Knowledge Pipeline")
     print(f"   URL: {args.url}")
     print(f"   Mode: {'Local' if args.local else 'GitHub'}")
     print(f"   Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")

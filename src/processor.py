@@ -27,7 +27,7 @@ class ProcessedNote:
 def _build_system_prompt() -> str:
     """Build the system prompt for Claude — project-based classification."""
 
-    return """You are a knowledge extraction and classification engine for a personal tech-learning pipeline. You receive English transcripts from TikTok tech videos and produce structured Hebrew knowledge notes in JSON format.
+    return """You are a knowledge extraction and classification engine for a personal tech-learning pipeline. You receive English transcripts from short-form tech videos (TikTok, Instagram Reels, YouTube Shorts) and produce structured Hebrew knowledge notes in JSON format.
 
 ## YOUR TASK
 
@@ -168,7 +168,7 @@ def process_transcript(
     """
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-    user_message = f"""Process this TikTok video transcript:
+    user_message = f"""Process this video transcript:
 
 Source URL: {source_url}
 Creator: @{creator}
